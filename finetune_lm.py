@@ -558,6 +558,7 @@ def main():
     config.model = model
     config.prune_ratios = 0.5
     config.rhos = {}
+    config.sparsity_type = 'n:m'
 
     ADMM = admm.ADMM(config)
     # ADMM.ADMM_Z = apply_n_m_sparsity_to_model(model, 2, 4, True)
