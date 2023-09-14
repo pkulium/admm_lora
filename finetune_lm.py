@@ -36,6 +36,11 @@ import evaluate
 import torch
 from datasets import load_dataset, concatenate_datasets
 import numpy as np
+from admm.warmup_scheduler import GradualWarmupScheduler
+from admm.cross_entropy import CrossEntropyLossMaybeSmooth
+from admm.utils import mixup_data, mixup_criterion
+import admm 
+
 
 import transformers
 from transformers import (
@@ -260,7 +265,7 @@ def load_mask(model, mask_path):
         param_tensor[key][mask] = 0
 
 import torch.nn as nn
-def apply_n_m_sparsity_to_model(model, n, m):
+def apply_n_m_sparsity_to_model(model, n, m, init):
     """
     Apply n:m sparsity to all lora_A and lora_B in the model and save the masks in a dictionary.
     
@@ -297,12 +302,27 @@ def apply_n_m_sparsity_to_model(model, n, m):
             
             # Compute the product and apply the sparsity mask
             product = torch.mm(lora_B.weight, lora_A.weight)
-            mask = get_n_m_sparsity_mask(product, n, m)
+            if init:
+                mask = get_n_m_sparsity_mask(product, n, m)
+            else:
+                mask = get_n_m_sparsity_mask(torch.rand(product), n, m)
             
             # Save the mask in the dictionary using the layer name as the key
             masks_dict[name] = mask
     
     return masks_dict
+
+class CustomTrainer(Trainer):
+    def compute_loss(self, model, inputs, return_outputs=False):
+        labels = inputs.pop("labels")
+        # forward pass
+        outputs = model(**inputs)
+        logits = outputs.get("logits")
+        # compute custom loss (suppose one has 3 labels with different weights)
+        loss_fct = nn.CrossEntropyLoss(weight=torch.tensor([1.0, 2.0, 3.0], device=model.device))
+        loss = loss_fct(logits.view(-1, self.model.config.num_labels), labels.view(-1))
+        return (loss, outputs) if return_outputs else loss
+
 
 def main():
     # See all possible arguments in src/transformers/training_args.py
@@ -534,7 +554,9 @@ def main():
         task_type="CAUSAL_LM",
     )
     model = get_peft_model(model, config)
-    mask = apply_n_m_sparsity_to_model(model, 2, 4)
+    ADMM = admm.ADMM(training_args)
+    ADMM.ADMM_Z = apply_n_m_sparsity_to_model(model, 2, 4, True)
+    ADMM.ADMM_U = {key: torch.zeros_like(ADMM.ADMM_Z[key]) for key in ADMM.ADMM_Z}
     ############################################################################################
 
     # We resize the embeddings only when necessary to avoid index errors. If you are creating a model from scratch
