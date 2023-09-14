@@ -282,7 +282,7 @@ def apply_n_m_sparsity_to_model(model, n, m):
 
     # Dictionary to store the masks
     masks_dict = {}
-    decoder_layers = model.base_model.model.layers
+    decoder_layers = model.base_model.model.model.layers
     for i, layer in enumerate(decoder_layers):
         # Access the self_attn attribute
         self_attn = layer.self_attn
