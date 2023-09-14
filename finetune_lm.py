@@ -530,7 +530,7 @@ def main():
         task_type="CAUSAL_LM",
     )
     model = get_peft_model(model, config)
-    mask = apply_n_m_sparsity_to_model(model)
+    mask = apply_n_m_sparsity_to_model(model, 2, 4)
     ############################################################################################
 
     # We resize the embeddings only when necessary to avoid index errors. If you are creating a model from scratch
