@@ -554,7 +554,7 @@ def main():
         task_type="CAUSAL_LM",
     )
     model = get_peft_model(model, config)
-    ADMM = admm.ADMM(training_args)
+    ADMM = admm.ADMM(config)
     ADMM.ADMM_Z = apply_n_m_sparsity_to_model(model, 2, 4, True)
     ADMM.ADMM_U = {key: torch.zeros_like(ADMM.ADMM_Z[key]) for key in ADMM.ADMM_Z}
     ############################################################################################
