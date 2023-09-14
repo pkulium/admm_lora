@@ -1,5 +1,4 @@
-CUDA_VISIBLE_DEVICES=0 python finetune_lm.py \
-    # --model_name_or_path decapoda-research/llama-7b-hf \
+CUDA_VISIBLE_DEVICES=0 python -m pdb finetune_lm.py \
     --model_name_or_path /work/LAS/wzhang-lab/mingl/code/admm_lora/out/llama_7b/2-4/wanda/weight \
     --dataset_name c4 \
     --num_train_epochs 1 \
@@ -13,3 +12,6 @@ CUDA_VISIBLE_DEVICES=0 python finetune_lm.py \
     --learning_rate 1e-4 \
     --overwrite_output_dir \
     --output_dir ./results/c4_80k_1_epoch/lr_1e-4
+
+
+# --model_name_or_path decapoda-research/llama-7b-hf \
