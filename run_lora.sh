@@ -1,5 +1,6 @@
 CUDA_VISIBLE_DEVICES=0 python finetune_lm.py \
-    --model_name_or_path decapoda-research/llama-7b-hf \
+    # --model_name_or_path decapoda-research/llama-7b-hf \
+    --model_name_or_path /work/LAS/wzhang-lab/mingl/code/admm_lora/out/llama_7b/2-4/wanda/weight \
     --dataset_name c4 \
     --num_train_epochs 1 \
     --block_size 1024 \
