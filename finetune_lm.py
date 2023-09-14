@@ -273,32 +273,35 @@ def apply_n_m_sparsity_to_model(model, n, m):
     - dict: Dictionary containing the sparsity masks with layer names as keys.
     """
     # Define the n:m sparsity function
-    def get_n_m_sparsity_mask(matrix, n, m):
-        sorted_indices = torch.argsort(matrix.view(-1), descending=True)
-        mask = torch.zeros_like(matrix).view(-1)
-        for i in range(0, len(sorted_indices), m):
-            mask[sorted_indices[i:i+n]] = 1
-        return mask.view(matrix.shape)
+    def get_n_m_sparsity_mask(weight, N, M):
+        length = weight.numel()
+        group = int(length/M)
+
+        weight_temp = weight.detach().abs().reshape(group, M)
+        index = torch.argsort(weight_temp, dim=1)[:, :int(M-N)]
+
+        w_b = torch.ones(weight_temp.shape, device=weight_temp.device)
+        w_b = w_b.scatter_(dim=1, index=index, value=0).reshape(weight.shape)
+
+        return w_b
 
     # Dictionary to store the masks
     masks_dict = {}
-    decoder_layers = model.base_model.model.model.layers
-    for i, layer in enumerate(decoder_layers):
-        # Access the self_attn attribute
-        self_attn = layer.self_attn
 
-        # Replace the Linear layers of v_proj and q_proj with MaskedLinear layers
-        for name, submodule in [('v_proj', self_attn.v_proj), ('q_proj', self_attn.q_proj)]:
-            lora_A = getattr(submodule, 'lora_A').default
-            lora_B = getattr(submodule, 'lora_B').default
+    # Traverse the model's layers
+    for name, module in model.named_modules():
+        # Check if the module has lora_A and lora_B attributes
+        if hasattr(module, 'lora_A') and hasattr(module, 'lora_B'):
+            lora_A = getattr(module, 'lora_A').default
+            lora_B = getattr(module, 'lora_B').default
             
             # Compute the product and apply the sparsity mask
             product = torch.mm(lora_B.weight, lora_A.weight)
             mask = get_n_m_sparsity_mask(product, n, m)
             
             # Save the mask in the dictionary using the layer name as the key
-            masks_dict[f'layer.{i}.{name}'] = mask
-
+            masks_dict[name] = mask
+    
     return masks_dict
 
 def main():
