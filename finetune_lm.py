@@ -292,7 +292,7 @@ def apply_n_m_sparsity_to_model(model, n, m):
             lora_B = getattr(module, 'lora_B').default
             
             # Compute the product and apply the sparsity mask
-            product = torch.mm(lora_A.weight, lora_B.weight)
+            product = torch.mm(lora_B.weight, lora_A.weight)
             mask = get_n_m_sparsity_mask(product, n, m)
             
             # Save the mask in the dictionary using the layer name as the key
