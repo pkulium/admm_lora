@@ -259,6 +259,47 @@ def load_mask(model, mask_path):
         mask = state_dict_mask[key]
         param_tensor[key][mask] = 0
 
+import torch.nn as nn
+
+def apply_n_m_sparsity_to_model(model, n, m):
+    """
+    Apply n:m sparsity to all lora_A and lora_B in the model and save the masks in a dictionary.
+    
+    Args:
+    - model (nn.Module): PyTorch model.
+    - n (int): Number of non-zero elements to keep in every group of m elements.
+    - m (int): Group size.
+    
+    Returns:
+    - dict: Dictionary containing the sparsity masks with layer names as keys.
+    """
+    # Define the n:m sparsity function
+    def get_n_m_sparsity_mask(matrix, n, m):
+        sorted_indices = torch.argsort(matrix.view(-1), descending=True)
+        mask = torch.zeros_like(matrix).view(-1)
+        for i in range(0, len(sorted_indices), m):
+            mask[sorted_indices[i:i+n]] = 1
+        return mask.view(matrix.shape)
+
+    # Dictionary to store the masks
+    masks_dict = {}
+
+    # Traverse the model's layers
+    for name, module in model.named_modules():
+        # Check if the module has lora_A and lora_B attributes
+        if hasattr(module, 'lora_A') and hasattr(module, 'lora_B'):
+            lora_A = getattr(module, 'lora_A').default
+            lora_B = getattr(module, 'lora_B').default
+            
+            # Compute the product and apply the sparsity mask
+            product = torch.mm(lora_A.weight, lora_B.weight)
+            mask = get_n_m_sparsity_mask(product, n, m)
+            
+            # Save the mask in the dictionary using the layer name as the key
+            masks_dict[name] = mask
+
+    return masks_dict
+
 def main():
     # See all possible arguments in src/transformers/training_args.py
     # or by passing the --help flag to this script.
@@ -696,7 +737,7 @@ def main():
         trainer.log_metrics("train", metrics)
         trainer.save_metrics("train", metrics)
         # trainer.save_state()
-
+    
     # Evaluation
     if training_args.do_eval:
         logger.info("*** Evaluate ***")
