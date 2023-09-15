@@ -5,8 +5,8 @@ CUDA_VISIBLE_DEVICES=0 python -m pdb finetune_lm.py \
     --block_size 1024 \
     --per_device_train_batch_size 2 \
     --per_device_eval_batch_size 8 \
-    --do_train \
-    --do_eval \
+    --do_train true \
+    --do_eval true\
     --max_train_samples 80000 \
     --max_eval_samples 128 \
     --learning_rate 1e-4 \
