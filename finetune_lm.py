@@ -303,7 +303,7 @@ def apply_n_m_sparsity_to_model(model, n, m, init):
             # Compute the product and apply the sparsity mask
             product = torch.mm(lora_B.weight, lora_A.weight)
             if init:
-                mask = get_n_m_sparsity_mask(torch.rand(product), n, m) 
+                mask = get_n_m_sparsity_mask(torch.rand_like(product), n, m) 
             else:
                 mask = get_n_m_sparsity_mask(product, n, m)
             
