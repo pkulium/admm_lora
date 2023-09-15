@@ -561,9 +561,9 @@ def main():
     config.sparsity_type = 'n:m'
 
     ADMM = admm.ADMM(config)
-    # ADMM.ADMM_Z = apply_n_m_sparsity_to_model(model, 2, 4, True)
-    # ADMM.ADMM_U = {key: torch.zeros_like(ADMM.ADMM_Z[key]) for key in ADMM.ADMM_Z}
-    # ADMM.rhos = {key: torch.rand(1) for key in ADMM.ADMM_Z}
+    ADMM.ADMM_Z = apply_n_m_sparsity_to_model(model, 2, 4, True)
+    ADMM.ADMM_U = {key: torch.zeros_like(ADMM.ADMM_Z[key]) for key in ADMM.ADMM_Z}
+    ADMM.rhos = {key: torch.rand(1) for key in ADMM.ADMM_Z}
     ############################################################################################
 
     # We resize the embeddings only when necessary to avoid index errors. If you are creating a model from scratch
