@@ -704,7 +704,7 @@ def main():
     batch_size = 128
     training_args.gradient_accumulation_steps = batch_size // training_args.per_device_train_batch_size
     training_args.warmup_steps = 5
-    # training_args.num_train_epochs = 10
+    training_args.num_train_epochs = 1
     # training_args.learning_rate = 1e-4
     training_args.fp16 = True
     training_args.logging_steps = 10
