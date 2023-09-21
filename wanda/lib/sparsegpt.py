@@ -7,7 +7,7 @@ import transformers
 
 torch.backends.cuda.matmul.allow_tf32 = False
 torch.backends.cudnn.allow_tf32 = False
-
+DEBUG = True
 ## SparseGPT: https://github.com/IST-DASLab/sparsegpt/tree/f5c25005a61f96a0933ca2f95705a963585aafaa
 class SparseGPT:
 
@@ -25,6 +25,9 @@ class SparseGPT:
         self.nsamples = 0
 
     def add_batch(self, inp, out):
+        if DEBUG:
+            self.inp1 = inp
+            self.out1 = out
         if len(inp.shape) == 2:
             inp = inp.unsqueeze(0)
         tmp = inp.shape[0]
